@@ -5,295 +5,159 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
 import { useState, useEffect, useRef } from "react"
-import { Globe, Layers, Thermometer, Droplets, MapPin, ZoomIn, ZoomOut, Eye, RotateCw, Target, Compass, Waves, Drill } from "lucide-react"
+import { 
+  Thermometer, 
+  Gauge, 
+  Wind, 
+  Cloud, 
+  Droplets,  
+  Activity,
+  Layers,
+  Compass,
+  AlertTriangle,
+  TrendingUp,
+  TrendingDown,
+  Map,
+  ZoomIn,
+  ZoomOut,
+  RotateCw
+} from "lucide-react"
 import { Canvas, useFrame } from "@react-three/fiber"
 import { OrbitControls, Environment, Stars } from "@react-three/drei"
 import { Suspense } from "react"
 import * as THREE from 'three'
 
-// 3D Water Detection Points INSIDE the planet
-function WaterDetectionPoints() {
+// Типы для TypeScript
+type IndicatorType = "temperature" | "pressure" | "wind" | "cloud" | "pollution"
+type StatusType = "normal" | "warning" | "critical"
+type TrendType = "rising" | "falling" | "stable"
+type TimeRangeType = "24h" | "7d" | "30d"
+
+// Atmospheric visualization
+function AtmosphericVisualization() {
   const groupRef = useRef<THREE.Group>(null)
   
-  // Positions of water deposits INSIDE Venus (spherical coordinates)
-  const waterDeposits = [
-    { depth: 0.3, phi: Math.PI/4, theta: 0, intensity: "high" },
-    { depth: 0.4, phi: Math.PI/3, theta: Math.PI/2, intensity: "high" },
-    { depth: 0.5, phi: Math.PI/6, theta: Math.PI, intensity: "medium" },
-    { depth: 0.6, phi: Math.PI/5, theta: 3*Math.PI/2, intensity: "medium" },
-    { depth: 0.7, phi: 2*Math.PI/3, theta: Math.PI/4, intensity: "low" },
-    { depth: 0.8, phi: 3*Math.PI/4, theta: 5*Math.PI/4, intensity: "low" },
-  ]
-
   useFrame((state) => {
     if (groupRef.current) {
-      groupRef.current.rotation.y = state.clock.elapsedTime * 0.05
+      groupRef.current.rotation.y = state.clock.elapsedTime * 0.02
     }
   })
 
   return (
     <group ref={groupRef}>
-      {waterDeposits.map((deposit, i) => {
-        // Convert spherical to cartesian coordinates (INSIDE the sphere)
-        const radius = 1 - deposit.depth * 0.7 // Points are inside, 0.3-0.8 of radius
-        const x = radius * Math.sin(deposit.phi) * Math.cos(deposit.theta)
-        const y = radius * Math.sin(deposit.phi) * Math.sin(deposit.theta)
-        const z = radius * Math.cos(deposit.phi)
-        
-        const color = deposit.intensity === "high" ? "#22d3ee" : 
-                     deposit.intensity === "medium" ? "#3b82f6" : "#8b5cf6"
-        
-        return (
-          <group key={i}>
-            {/* Main water deposit sphere */}
-            <mesh position={[x, y, z]}>
-              <sphereGeometry args={[0.05 + (deposit.depth * 0.02), 16, 16]} />
-              <meshStandardMaterial
-                color={color}
-                emissive={color}
-                emissiveIntensity={0.5}
-                transparent
-                opacity={0.8}
-              />
-            </mesh>
-            
-            {/* Glow effect */}
-            <mesh position={[x, y, z]}>
-              <sphereGeometry args={[0.08 + (deposit.depth * 0.03), 8, 8]} />
-              <meshStandardMaterial
-                color={color}
-                transparent
-                opacity={0.2}
-                side={THREE.BackSide}
-              />
-            </mesh>
-            
-            {/* Connection line to surface (drilling path visualization) */}
-            <mesh>
-              <tubeGeometry args={[
-                new THREE.CatmullRomCurve3([
-                  new THREE.Vector3(0, 0, 0),
-                  new THREE.Vector3(x * 1.5, y * 1.5, z * 1.5)
-                ]),
-                64,
-                0.01,
-                8,
-                false
-              ]} />
-              <meshStandardMaterial
-                color={color}
-                transparent
-                opacity={0.3}
-                emissive={color}
-                emissiveIntensity={0.1}
-              />
-            </mesh>
-          </group>
-        )
-      })}
-      
-      {/* Underground water veins network */}
+      {/* Venus with atmosphere layers */}
       <mesh>
-        <sphereGeometry args={[0.85, 64, 64]} />
-        <meshStandardMaterial
-          color="#22d3ee"
-          transparent
-          opacity={0.05}
-          wireframe
-          emissive="#22d3ee"
-          emissiveIntensity={0.1}
-        />
-      </mesh>
-    </group>
-  )
-}
-
-// Semi-transparent Venus with cutaway view
-function CutawayVenus() {
-  const meshRef = useRef<THREE.Mesh>(null)
-  
-  useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.y = state.clock.elapsedTime * 0.05
-    }
-  })
-
-  return (
-    <group>
-      {/* Outer transparent shell */}
-      <mesh ref={meshRef}>
         <sphereGeometry args={[1, 64, 64]} />
         <meshStandardMaterial
           color="#FF9966"
+          roughness={0.9}
+          metalness={0.1}
+          emissive="#FF9966"
+          emissiveIntensity={0.1}
+        />
+      </mesh>
+      
+      {/* Atmospheric layers */}
+      {[1.05, 1.1, 1.15, 1.2].map((radius, i) => (
+        <mesh key={i}>
+          <sphereGeometry args={[radius, 32, 32]} />
+          <meshStandardMaterial
+            color={i === 0 ? "#FF6633" : i === 1 ? "#FF3300" : i === 2 ? "#CC3300" : "#993300"}
+            transparent
+            opacity={0.05 + (i * 0.02)}
+            side={THREE.BackSide}
+            roughness={1}
+          />
+        </mesh>
+      ))}
+      
+      {/* Cloud layers with animation */}
+      <mesh>
+        <sphereGeometry args={[1.08, 96, 96]} />
+        <meshStandardMaterial
+          color="#FFFFFF"
           transparent
           opacity={0.3}
-          roughness={0.8}
-          metalness={0.1}
-          side={THREE.DoubleSide}
+          roughness={1}
+          metalness={0}
         />
       </mesh>
       
-      {/* Inner layers visualization */}
-      <mesh>
-        <sphereGeometry args={[0.9, 64, 64]} />
-        <meshStandardMaterial
-          color="#CC6633"
-          transparent
-          opacity={0.2}
-          side={THREE.BackSide}
-          wireframe
-        />
-      </mesh>
+      {/* Super-rotation winds visualization */}
+      <group>
+        {Array.from({ length: 12 }).map((_, i) => {
+          const angle = (i * Math.PI * 2) / 12
+          const radius = 1.12
+          
+          return (
+            <mesh key={i} position={[
+              radius * Math.cos(angle),
+              0,
+              radius * Math.sin(angle)
+            ]}>
+              <torusGeometry args={[0.05, 0.01, 8, 24, Math.PI]} />
+              <meshStandardMaterial
+                color="#22d3ee"
+                emissive="#22d3ee"
+                emissiveIntensity={0.5}
+              />
+            </mesh>
+          )
+        })}
+      </group>
       
-      <mesh>
-        <sphereGeometry args={[0.8, 64, 64]} />
-        <meshStandardMaterial
-          color="#993300"
-          transparent
-          opacity={0.15}
-          side={THREE.BackSide}
-          wireframe
-          wireframeLinewidth={2}
-        />
-      </mesh>
-      
-      <mesh>
-        <sphereGeometry args={[0.7, 64, 64]} />
-        <meshStandardMaterial
-          color="#662200"
-          transparent
-          opacity={0.1}
-          side={THREE.BackSide}
-          wireframe
-          wireframeLinewidth={1}
-        />
-      </mesh>
-      
-      {/* Core */}
-      <mesh>
-        <sphereGeometry args={[0.3, 32, 32]} />
-        <meshStandardMaterial
-          color="#FF3300"
-          emissive="#FF3300"
-          emissiveIntensity={0.3}
-          roughness={0.5}
-          metalness={0.5}
-        />
-      </mesh>
+      {/* Temperature gradient rings */}
+      {[-0.5, 0, 0.5].map((y, i) => (
+        <mesh key={`ring-${i}`} position={[0, y, 0]}>
+          <ringGeometry args={[1.3, 1.25, 64]} />
+          <meshStandardMaterial
+            color={i === 0 ? "#FF3300" : i === 1 ? "#FF6600" : "#FF9900"}
+            transparent
+            opacity={0.3}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      ))}
     </group>
   )
 }
 
-// Drilling paths visualization
-function DrillingPaths() {
-  const pathsRef = useRef<THREE.Group>(null)
-  
-  useFrame((state) => {
-    if (pathsRef.current) {
-      pathsRef.current.rotation.y = state.clock.elapsedTime * 0.03
-    }
-  })
-
-  return (
-    <group ref={pathsRef}>
-      {Array.from({ length: 6 }).map((_, i) => {
-        const angle = (i * Math.PI * 2) / 6
-        const startRadius = 1.1
-        const endRadius = 0.3
-        
-        return (
-          <mesh key={i}>
-            <tubeGeometry args={[
-              new THREE.CatmullRomCurve3([
-                new THREE.Vector3(
-                  startRadius * Math.cos(angle),
-                  startRadius * Math.sin(angle),
-                  0
-                ),
-                new THREE.Vector3(
-                  endRadius * Math.cos(angle) * 0.5,
-                  endRadius * Math.sin(angle) * 0.5,
-                  endRadius * 0.5
-                )
-              ]),
-              64,
-              0.02,
-              8,
-              false
-            ]} />
-            <meshStandardMaterial
-              color="#FFFFFF"
-              transparent
-              opacity={0.3}
-              emissive="#FFFFFF"
-              emissiveIntensity={0.1}
-            />
-          </mesh>
-        )
-      })}
-    </group>
-  )
-}
-
-// Main Venus Model with interior view
-function VenusInteriorModel({ zoom = 1, rotation = 0, showWaterDetection = true }: { 
+// Environmental Model Component
+function VenusEnvironmentalModel({ zoom = 1, rotation = 0 }: { 
   zoom?: number; 
   rotation?: number;
-  showWaterDetection?: boolean;
 }) {
   return (
     <div className="w-full h-full">
       <Canvas 
         camera={{ 
-          position: [0, 0, 2.5 * zoom], 
+          position: [0, 0, 3 * zoom], 
           fov: 45,
           near: 0.1,
           far: 1000
         }}
       >
-        {/* Lighting for interior view */}
+        {/* Special lighting for atmospheric visualization */}
         <ambientLight intensity={0.4} color="#FF9966" />
-        <pointLight position={[0, 5, 5]} intensity={1.5} color="#FFFFFF" />
-        <pointLight position={[0, 0, -5]} intensity={0.5} color="#FF9966" />
-        <pointLight position={[0, -5, 0]} intensity={0.3} color="#FF6633" />
+        <directionalLight position={[5, 5, 5]} intensity={1} color="#FFFFFF" />
+        <pointLight position={[0, 0, -5]} intensity={0.3} color="#FF6633" />
+        <pointLight position={[-5, -5, -5]} intensity={0.2} color="#FF3300" />
         
-        {/* Fog for depth */}
         <fog attach="fog" args={['#000000', 20, 50]} />
         
         <Suspense fallback={null}>
           <group rotation={[0.3, rotation * Math.PI / 180, 0]}>
-            {/* Cutaway Venus */}
-            <CutawayVenus />
-            
-            {/* Drilling paths */}
-            <DrillingPaths />
-            
-            {/* Water detection points INSIDE */}
-            {showWaterDetection && <WaterDetectionPoints />}
-            
-            {/* Atmospheric glow */}
-            <mesh>
-              <sphereGeometry args={[1.1, 32, 32]} />
-              <meshStandardMaterial
-                color="#FF6633"
-                transparent
-                opacity={0.05}
-                side={THREE.BackSide}
-                emissive="#FF6633"
-                emissiveIntensity={0.2}
-              />
-            </mesh>
+            <AtmosphericVisualization />
           </group>
           
-          {/* Stars background */}
           <Stars
             radius={100}
             depth={50}
-            count={3000}
+            count={2000}
             factor={4}
             saturation={0}
             fade
-            speed={0.3}
+            speed={0.2}
           />
           
           <Environment preset="sunset" />
@@ -304,7 +168,7 @@ function VenusInteriorModel({ zoom = 1, rotation = 0, showWaterDetection = true 
           enablePan={true}
           enableRotate={true}
           autoRotate={true}
-          autoRotateSpeed={0.2}
+          autoRotateSpeed={0.15}
           minDistance={1.5}
           maxDistance={6}
           maxPolarAngle={Math.PI}
@@ -319,137 +183,162 @@ function VenusInteriorModel({ zoom = 1, rotation = 0, showWaterDetection = true 
 
 const translations = {
   kk: {
-    title: "Венера Ішкі Құрылымы",
-    subtitle: "Жер асты су қоймаларының 3D көрінісі",
+    title: "Венера Экологиялық Талдау",
+    subtitle: "Атмосфералық және климаттық көрсеткіштердің нақты уақыттағы мониторингі",
     temperature: "Температура",
+    pressure: "Қысым",
+    windSpeed: "Жел жылдамдығы",
+    cloudCover: "Бұлттылық",
     humidity: "Ылғалдылық",
-    depth: "Тереңдік",
-    waterChannels: "Су каналдары",
-    hotspots: "Су қоймалары",
-    legend: "Легенда",
-    highWater: "Жоғары су мөлшері",
-    mediumWater: "Орташа су",
-    lowWater: "Төмен су",
-    noWater: "Су жоқ",
-    zoom: "Масштаб",
-    rotate: "Айналдыру",
-    layers: "Қабаттар",
-    surface: "Беткі қабат",
-    mantle: "Мантия",
-    core: "Ядро",
+    acidity: "Тұздылық",
+    co2: "CO₂ концентрациясы",
+    so2: "SO₂ концентрациясы",
+    solarRadiation: "Күн сәулесі",
+    uvIndex: "Ультракүлгін индекс",
+    legend: "Көрсеткіштер",
+    normal: "Қалыпты",
+    warning: "Ескерту",
+    critical: "Сыни",
+    layers: "Атмосфера қабаттары",
+    troposphere: "Тропосфера",
+    stratosphere: "Стратосфера",
+    mesosphere: "Мезосфера",
+    thermosphere: "Термосфера",
     region: "Аймақ",
-    clickToExplore: "Зерттеу үшін басыңыз",
-    rotateModel: "Модельді айналдыру",
-    resetView: "Көріністі қалпына келтіру",
-    waterDetection: "Су анықтау",
-    activeZones: "Белсенді аймақтар",
-    surfaceFeatures: "Ішкі құрылым",
-    atmosphericPressure: "Қысым",
     realtimeData: "Нақты уақыттағы деректер",
-    interiorView: "Ішкі көрініс",
-    drillingDepth: "Бұрғылау тереңдігі",
-    waterVolume: "Су көлемі",
+    environmentalMonitoring: "Экологиялық мониторинг",
+    atmosphericComposition: "Атмосфера құрамы",
+    climatePatterns: "Климат үлгілері",
+    seasonalChanges: "Маусымдық өзгерістер",
+    pollutionLevels: "Ластану деңгейі",
+    weatherPatterns: "Ауа райы үлгілері",
+    thermalMap: "Жылу картасы",
+    pressureMap: "Қысым картасы",
+    windPatterns: "Жел үлгілері",
   },
   ru: {
-    title: "Внутренняя Структура Венеры",
-    subtitle: "3D визуализация подземных водоносных горизонтов",
+    title: "Экологический Анализ Венеры",
+    subtitle: "Мониторинг атмосферных и климатических показателей в реальном времени",
     temperature: "Температура",
+    pressure: "Давление",
+    windSpeed: "Скорость ветра",
+    cloudCover: "Облачность",
     humidity: "Влажность",
-    depth: "Глубина",
-    waterChannels: "Водные каналы",
-    hotspots: "Водоносные горизонты",
-    legend: "Легенда",
-    highWater: "Высокий уровень воды",
-    mediumWater: "Средний уровень",
-    lowWater: "Низкий уровень",
-    noWater: "Нет воды",
-    zoom: "Масштаб",
-    rotate: "Вращение",
-    layers: "Слои",
-    surface: "Поверхность",
-    mantle: "Мантия",
-    core: "Ядро",
+    acidity: "Кислотность",
+    co2: "Концентрация CO₂",
+    so2: "Концентрация SO₂",
+    solarRadiation: "Солнечная радиация",
+    uvIndex: "УФ индекс",
+    legend: "Показатели",
+    normal: "Нормальный",
+    warning: "Предупреждение",
+    critical: "Критический",
+    layers: "Слои атмосферы",
+    troposphere: "Тропосфера",
+    stratosphere: "Стратосфера",
+    mesosphere: "Мезосфера",
+    thermosphere: "Термосфера",
     region: "Регион",
-    clickToExplore: "Нажмите для изучения",
-    rotateModel: "Вращать модель",
-    resetView: "Сбросить вид",
-    waterDetection: "Обнаружение воды",
-    activeZones: "Активные зоны",
-    surfaceFeatures: "Внутренняя структура",
-    atmosphericPressure: "Давление",
     realtimeData: "Данные в реальном времени",
-    interiorView: "Внутренний вид",
-    drillingDepth: "Глубина бурения",
-    waterVolume: "Объем воды",
+    environmentalMonitoring: "Экологический мониторинг",
+    atmosphericComposition: "Состав атмосферы",
+    climatePatterns: "Климатические паттерны",
+    seasonalChanges: "Сезонные изменения",
+    pollutionLevels: "Уровни загрязнения",
+    weatherPatterns: "Погодные паттерны",
+    thermalMap: "Тепловая карта",
+    pressureMap: "Карта давления",
+    windPatterns: "Ветровые паттерны",
   },
   en: {
-    title: "Venus Interior Structure",
-    subtitle: "3D visualization of underground aquifers",
+    title: "Venus Environmental Analysis",
+    subtitle: "Real-time monitoring of atmospheric and climate indicators",
     temperature: "Temperature",
+    pressure: "Pressure",
+    windSpeed: "Wind Speed",
+    cloudCover: "Cloud Cover",
     humidity: "Humidity",
-    depth: "Depth",
-    waterChannels: "Water Channels",
-    hotspots: "Aquifers",
-    legend: "Legend",
-    highWater: "High Water Content",
-    mediumWater: "Medium Water",
-    lowWater: "Low Water",
-    noWater: "No Water",
-    zoom: "Zoom",
-    rotate: "Rotate",
-    layers: "Layers",
-    surface: "Surface",
-    mantle: "Mantle",
-    core: "Core",
+    acidity: "Acidity",
+    co2: "CO₂ Concentration",
+    so2: "SO₂ Concentration",
+    solarRadiation: "Solar Radiation",
+    uvIndex: "UV Index",
+    legend: "Indicators",
+    normal: "Normal",
+    warning: "Warning",
+    critical: "Critical",
+    layers: "Atmospheric Layers",
+    troposphere: "Troposphere",
+    stratosphere: "Stratosphere",
+    mesosphere: "Mesosphere",
+    thermosphere: "Thermosphere",
     region: "Region",
-    clickToExplore: "Click to explore",
-    rotateModel: "Rotate Model",
-    resetView: "Reset View",
-    waterDetection: "Water Detection",
-    activeZones: "Active Zones",
-    surfaceFeatures: "Interior Structure",
-    atmosphericPressure: "Pressure",
     realtimeData: "Realtime Data",
-    interiorView: "Interior View",
-    drillingDepth: "Drilling Depth",
-    waterVolume: "Water Volume",
+    environmentalMonitoring: "Environmental Monitoring",
+    atmosphericComposition: "Atmospheric Composition",
+    climatePatterns: "Climate Patterns",
+    seasonalChanges: "Seasonal Changes",
+    pollutionLevels: "Pollution Levels",
+    weatherPatterns: "Weather Patterns",
+    thermalMap: "Thermal Map",
+    pressureMap: "Pressure Map",
+    windPatterns: "Wind Patterns",
   },
 }
 
-// Interactive Hotspot Marker for UI (on the surface, but represents interior point)
-function InteriorHotspotMarker({
+// Функция для получения перевода по ключу с безопасным доступом
+const getTranslation = (lang: "kk" | "ru" | "en", key: string): string => {
+  return translations[lang][key as keyof typeof translations[typeof lang]] || key
+}
+
+// Environmental Indicator with status
+function EnvironmentalIndicator({
   x,
   y,
-  intensity,
+  type,
+  value,
+  status,
   delay,
   onClick,
-  depth,
 }: { 
   x: number; 
   y: number; 
-  intensity: "high" | "medium" | "low"; 
-  delay: number; 
+  type: IndicatorType;
+  value: number;
+  status: StatusType;
+  delay: number;
   onClick: () => void;
-  depth: number;
 }) {
   const colors = {
-    high: ["#22d3ee", "#06b6d4", "#0891b2"],
-    medium: ["#3b82f6", "#2563eb", "#1d4ed8"],
-    low: ["#8b5cf6", "#7c3aed", "#6d28d9"],
+    normal: ["#10b981", "#059669", "#047857"],
+    warning: ["#f59e0b", "#d97706", "#b45309"],
+    critical: ["#ef4444", "#dc2626", "#b91c1c"],
   }
+  
+  const icons = {
+    temperature: <Thermometer className="w-3 h-3" />,
+    pressure: <Gauge className="w-3 h-3" />,
+    wind: <Wind className="w-3 h-3" />,
+    cloud: <Cloud className="w-3 h-3" />,
+    pollution: <AlertTriangle className="w-3 h-3" />,
+  }
+  
+  const size = status === "critical" ? 28 : status === "warning" ? 24 : 20
 
   return (
     <motion.button
-      className="absolute rounded-full cursor-pointer z-10 flex flex-col items-center justify-center"
+      className="absolute rounded-full cursor-pointer z-10 flex items-center justify-center"
       style={{ 
         left: `${x}%`, 
         top: `${y}%`, 
         transform: "translate(-50%, -50%)",
+        width: size,
+        height: size,
       }}
       initial={{ scale: 0, opacity: 0 }}
       animate={{
-        scale: [1, 1.3, 1],
-        opacity: [0.6, 1, 0.6],
+        scale: [1, 1.2, 1],
+        opacity: [0.7, 1, 0.7],
       }}
       transition={{
         duration: 2,
@@ -457,195 +346,268 @@ function InteriorHotspotMarker({
         repeat: Number.POSITIVE_INFINITY,
         ease: "easeInOut",
       }}
-      whileHover={{ scale: 1.5 }}
+      whileHover={{ scale: 1.3 }}
       onClick={onClick}
     >
-      {/* Depth indicator line */}
-      <motion.div 
-        className="absolute w-0.5 bg-gradient-to-t from-cyan-400/50 to-transparent"
-        style={{ 
-          height: `${depth * 2}px`,
-          bottom: "100%",
-        }}
-        animate={{
-          height: [`${depth * 2}px`, `${depth * 2.5}px`, `${depth * 2}px`],
-        }}
-        transition={{
-          duration: 3,
-          repeat: Number.POSITIVE_INFINITY,
-          ease: "easeInOut",
+      <div className="absolute inset-0 rounded-full animate-ping"
+        style={{
+          backgroundColor: colors[status][0],
+          animationDelay: `${delay}s`,
         }}
       />
       
-      {/* Outer marker */}
-      <div className="relative">
-        {/* Drilling animation */}
-        <motion.div 
-          className="absolute -top-4 left-1/2 transform -translate-x-1/2"
-          animate={{ y: [0, -depth * 3, 0] }}
-          transition={{
-            duration: 4,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "linear",
-          }}
-        >
-          <Drill className="w-3 h-3 text-white" />
-        </motion.div>
-        
-        {/* Marker glow */}
-        <div className="absolute inset-0 rounded-full animate-ping"
-          style={{
-            backgroundColor: colors[intensity][0],
-            animationDelay: `${delay}s`,
-          }}
-        />
-        
-        <div className="relative w-5 h-5 rounded-full flex items-center justify-center"
-          style={{
-            backgroundColor: colors[intensity][1],
-            boxShadow: `0 0 20px 10px ${colors[intensity][0]}40`,
-          }}
-        >
-          <Waves className="w-3 h-3 text-white" />
+      <div className="relative rounded-full flex items-center justify-center"
+        style={{
+          backgroundColor: colors[status][1],
+          width: size - 4,
+          height: size - 4,
+          boxShadow: `0 0 15px 5px ${colors[status][0]}40`,
+        }}
+      >
+        <div className="text-white">
+          {icons[type]}
         </div>
-      </div>
-      
-      {/* Depth label */}
-      <div className="absolute -bottom-6 text-xs text-cyan-300 whitespace-nowrap">
-        {depth}км
       </div>
     </motion.button>
   )
 }
 
-export function VenusInteriorGlobe() {
+// Real-time data visualization
+function RealTimeDataChart({ type, data }: { type: string; data: number[] }) {
+  const maxValue = Math.max(...data)
+  const minValue = Math.min(...data)
+  
+  return (
+    <div className="relative h-20 w-full bg-gray-900/30 rounded-lg overflow-hidden">
+      <div className="absolute inset-0 flex items-end">
+        {data.map((value, i) => (
+          <motion.div
+            key={i}
+            className="flex-1 mx-0.5"
+            initial={{ height: 0 }}
+            animate={{ height: `${(value / maxValue) * 100}%` }}
+            transition={{ duration: 0.5, delay: i * 0.05 }}
+          >
+            <div 
+              className={`h-full rounded-t ${
+                type === "temperature" ? "bg-gradient-to-t from-orange-500 to-red-500" :
+                type === "pressure" ? "bg-gradient-to-t from-blue-500 to-purple-500" :
+                type === "wind" ? "bg-gradient-to-t from-cyan-500 to-blue-500" :
+                "bg-gradient-to-t from-gray-500 to-gray-700"
+              }`}
+            />
+          </motion.div>
+        ))}
+      </div>
+      <div className="absolute bottom-1 left-2 text-xs text-gray-400">
+        Min: {minValue.toFixed(1)}
+      </div>
+      <div className="absolute bottom-1 right-2 text-xs text-gray-400">
+        Max: {maxValue.toFixed(1)}
+      </div>
+    </div>
+  )
+}
+
+export function VenusEnvironmentalAnalysis() {
   const { lang } = useLanguage()
   const t = translations[lang]
   const [zoom, setZoom] = useState(1)
-  const [manualRotation, setManualRotation] = useState(0)
-  const [showWaterDetection, setShowWaterDetection] = useState(true)
-  const [selectedHotspot, setSelectedHotspot] = useState<number | null>(null)
-  const [activeLayer, setActiveLayer] = useState<"surface" | "mantle" | "core">("mantle")
-  const [viewMode, setViewMode] = useState<"exterior" | "interior">("interior")
+  const [rotation, setRotation] = useState(0)
+  const [selectedIndicator, setSelectedIndicator] = useState<number | null>(null)
+  const [timeRange, setTimeRange] = useState<TimeRangeType>("24h")
 
-  // Interior water deposits data
-  const interiorDeposits = [
+  // Интерфейс для индикатора
+  interface Indicator {
+    x: number;
+    y: number;
+    type: IndicatorType;
+    value: number;
+    status: StatusType;
+    name: string;
+    description: string;
+    trends: {
+      current: number;
+      change: number;
+      trend: TrendType;
+      historicalAvg: number;
+    };
+  }
+
+  // Environmental indicators data
+  const indicators: Indicator[] = [
     { 
-      surfaceX: 25, 
-      surfaceY: 35,
-      depth: 8.2,
-      temp: 462, 
-      humidity: 96.5, 
-      pressure: 92,
-      volume: 520,
-      intensity: "high" as const,
-      name: "Maxwell Aquifer",
-      description: "Глубокий водоносный горизонт в мантии, содержит большие запасы воды в пористых породах",
-      composition: ["Вода", "Минеральные соли", "Кремний", "Железо"],
-      accessDifficulty: "Высокая"
+      x: 30, 
+      y: 40,
+      type: "temperature",
+      value: 462,
+      status: "critical",
+      name: "Экватор",
+      description: "Максимальная температура поверхности, постоянный перегрев",
+      trends: {
+        current: 462,
+        change: +2.3,
+        trend: "rising",
+        historicalAvg: 460
+      }
     },
     { 
-      surfaceX: 60, 
-      surfaceY: 45,
-      depth: 6.5,
-      temp: 457, 
-      humidity: 95.8, 
-      pressure: 88,
-      volume: 480,
-      intensity: "high" as const,
-      name: "Ishtar Reservoir",
-      description: "Обширная сеть подземных водных каналов и резервуаров",
-      composition: ["Вода", "Углекислый газ", "Сера", "Базальт"],
-      accessDifficulty: "Средняя"
+      x: 65, 
+      y: 35,
+      type: "pressure",
+      value: 92,
+      status: "critical",
+      name: "Ishtar Terra",
+      description: "Экстремальное атмосферное давление, в 92 раза выше земного",
+      trends: {
+        current: 92,
+        change: +0.5,
+        trend: "stable",
+        historicalAvg: 91.5
+      }
     },
     { 
-      surfaceX: 45, 
-      surfaceY: 60,
-      depth: 12.8,
-      temp: 465, 
-      humidity: 84.3, 
-      pressure: 91,
-      volume: 320,
-      intensity: "medium" as const,
-      name: "Aphrodite Aquifer",
-      description: "Глубокий водоносный слой в переходной зоне между корой и мантией",
-      composition: ["Вода", "Минералы", "Метан", "Аммиак"],
-      accessDifficulty: "Очень высокая"
+      x: 45, 
+      y: 60,
+      type: "wind",
+      value: 360,
+      status: "warning",
+      name: "Суперротация",
+      description: "Сверхбыстрые ветры в верхних слоях атмосферы",
+      trends: {
+        current: 360,
+        change: +15,
+        trend: "rising",
+        historicalAvg: 345
+      }
     },
     { 
-      surfaceX: 70, 
-      surfaceY: 65,
-      depth: 15.3,
-      temp: 468, 
-      humidity: 78.9, 
-      pressure: 93,
-      volume: 280,
-      intensity: "medium" as const,
-      name: "Lada Deep Well",
-      description: "Система глубоких гидротермальных резервуаров",
-      composition: ["Гидротермальная вода", "Сульфиды", "Металлы"],
-      accessDifficulty: "Экстремальная"
+      x: 20, 
+      y: 70,
+      type: "cloud",
+      value: 100,
+      status: "normal",
+      name: "Южный полюс",
+      description: "Постоянная облачность из серной кислоты",
+      trends: {
+        current: 100,
+        change: 0,
+        trend: "stable",
+        historicalAvg: 100
+      }
     },
     { 
-      surfaceX: 35, 
-      surfaceY: 75,
-      depth: 22.1,
-      temp: 472, 
-      humidity: 67.5, 
-      pressure: 95,
-      volume: 180,
-      intensity: "low" as const,
-      name: "Beta Geothermal",
-      description: "Геотермальные водные источники вблизи ядра",
-      composition: ["Перегретая вода", "Минеральные растворы"],
-      accessDifficulty: "Технически сложная"
-    },
-    { 
-      surfaceX: 65, 
-      surfaceY: 30,
-      depth: 18.6,
-      temp: 459, 
-      humidity: 71.2, 
-      pressure: 89,
-      volume: 220,
-      intensity: "low" as const,
-      name: "Alpha Deep Aquifer",
-      description: "Древние водные резервуары в магматических породах",
-      composition: ["Архаичная вода", "Тяжелые минералы"],
-      accessDifficulty: "Высокая"
+      x: 75, 
+      y: 65,
+      type: "pollution",
+      value: 96.5,
+      status: "critical",
+      name: "Глобальная атмосфера",
+      description: "Концентрация CO₂ достигает 96.5%, создавая сильный парниковый эффект",
+      trends: {
+        current: 96.5,
+        change: +0.2,
+        trend: "rising",
+        historicalAvg: 96.3
+      }
     },
   ]
 
-  const handleRotateLeft = () => {
-    setManualRotation(prev => prev - 45)
-  }
+  // Real-time data simulation
+  const [temperatureData, setTemperatureData] = useState<number[]>([])
+  const [pressureData, setPressureData] = useState<number[]>([])
+  const [windData, setWindData] = useState<number[]>([])
 
-  const handleRotateRight = () => {
-    setManualRotation(prev => prev + 45)
-  }
+  useEffect(() => {
+    // Generate initial data
+    const generateData = () => {
+      const data = Array.from({ length: 24 }, () => 460 + Math.random() * 5)
+      setTemperatureData(data)
+      
+      const pressureData = Array.from({ length: 24 }, () => 90 + Math.random() * 4)
+      setPressureData(pressureData)
+      
+      const windData = Array.from({ length: 24 }, () => 350 + Math.random() * 20)
+      setWindData(windData)
+    }
+    
+    generateData()
+    
+    // Update data periodically
+    const interval = setInterval(() => {
+      setTemperatureData(prev => [...prev.slice(1), 460 + Math.random() * 5])
+      setPressureData(prev => [...prev.slice(1), 90 + Math.random() * 4])
+      setWindData(prev => [...prev.slice(1), 350 + Math.random() * 20])
+    }, 5000)
+    
+    return () => clearInterval(interval)
+  }, [])
 
+  const handleRotateLeft = () => setRotation(prev => prev - 45)
+  const handleRotateRight = () => setRotation(prev => prev + 45)
   const handleResetView = () => {
     setZoom(1)
-    setManualRotation(0)
+    setRotation(0)
   }
 
-  const toggleViewMode = () => {
-    setViewMode(prev => prev === "exterior" ? "interior" : "exterior")
+  const getTrendIcon = (trend: TrendType) => {
+    if (trend === "rising") return <TrendingUp className="w-4 h-4 text-red-400" />
+    if (trend === "falling") return <TrendingDown className="w-4 h-4 text-green-400" />
+    return <Activity className="w-4 h-4 text-yellow-400" />
+  }
+
+  // Функция для получения названия типа индикатора
+  const getIndicatorLabel = (type: IndicatorType): string => {
+    const labels = {
+      temperature: t.temperature,
+      pressure: t.pressure,
+      wind: t.windSpeed,
+      cloud: t.cloudCover,
+      pollution: t.pollutionLevels
+    }
+    return labels[type]
+  }
+
+  // Функция для получения единицы измерения
+  const getIndicatorUnit = (type: IndicatorType): string => {
+    const units = {
+      temperature: "°C",
+      pressure: " атм",
+      wind: " км/ч",
+      cloud: "%",
+      pollution: "%"
+    }
+    return units[type]
   }
 
   return (
     <section className="py-16 sm:py-24 px-4 relative overflow-hidden">
-      {/* Background with deep space gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-purple-950/20" />
+      {/* Background with atmospheric gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-orange-950/10 via-gray-900 to-purple-950/10" />
       
-      {/* Subtle grid pattern */}
-      <div className="absolute inset-0 opacity-5"
-        style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                          linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-          backgroundSize: '50px 50px',
-        }}
-      />
+      {/* Atmospheric particles effect */}
+      <div className="absolute inset-0 opacity-10">
+        {Array.from({ length: 50 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-orange-400 rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [0, -20, 0],
+              x: [0, Math.sin(i) * 10, 0],
+              opacity: [0.2, 1, 0.2],
+            }}
+            transition={{
+              duration: 3 + Math.random() * 2,
+              repeat: Number.POSITIVE_INFINITY,
+              delay: i * 0.1,
+            }}
+          />
+        ))}
+      </div>
 
       <div className="container mx-auto relative z-10">
         {/* Header */}
@@ -656,14 +618,14 @@ export function VenusInteriorGlobe() {
           transition={{ duration: 0.8 }}
           className="text-center mb-12"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-cyan-500/30 bg-gradient-to-r from-cyan-900/20 to-blue-900/20 backdrop-blur-sm mb-6">
-            <Layers className="w-4 h-4 text-cyan-300" />
-            <span className="text-xs sm:text-sm text-cyan-300 uppercase tracking-wide font-semibold">
-              {t.interiorView} • {t.realtimeData}
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-orange-500/30 bg-gradient-to-r from-orange-900/20 to-red-900/20 backdrop-blur-sm mb-6">
+            <Activity className="w-4 h-4 text-orange-300" />
+            <span className="text-xs sm:text-sm text-orange-300 uppercase tracking-wide font-semibold">
+              {t.environmentalMonitoring} • {t.realtimeData}
             </span>
           </div>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4">
-            <span className="bg-gradient-to-r from-cyan-300 via-blue-400 to-purple-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-orange-300 via-red-400 to-pink-500 bg-clip-text text-transparent">
               {t.title}
             </span>
           </h2>
@@ -679,213 +641,169 @@ export function VenusInteriorGlobe() {
             transition={{ duration: 0.8 }}
             className="lg:col-span-3"
           >
-            <Card className="border-cyan-500/30 bg-gradient-to-br from-gray-900/50 to-black/50 backdrop-blur-xl overflow-hidden">
+            <Card className="border-orange-500/30 bg-gradient-to-br from-gray-900/50 to-black/50 backdrop-blur-xl overflow-hidden">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <CardTitle className="flex items-center gap-2 text-lg">
-                    <Globe className="w-5 h-5 text-cyan-300" />
-                    <span className="text-white">{t.title}</span>
-                    <span className="text-xs text-cyan-300/70 font-normal">({t.interiorView})</span>
+                    <Thermometer className="w-5 h-5 text-orange-300" />
+                    <span className="text-white">{t.atmosphericComposition}</span>
                   </CardTitle>
                   <div className="flex items-center gap-2">
                     <Button
                       size="sm"
                       variant="outline"
-                      className="border-cyan-500/50 bg-black/30 hover:bg-cyan-900/30"
+                      className="border-orange-500/50 bg-black/30 hover:bg-orange-900/30"
                       onClick={() => setZoom((prev) => Math.min(2, prev + 0.2))}
-                      title={t.zoom}
+                      title={t.thermalMap}
                     >
-                      <ZoomIn className="w-4 h-4 text-cyan-300" />
+                      <ZoomIn className="w-4 h-4 text-orange-300" />
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
-                      className="border-cyan-500/50 bg-black/30 hover:bg-cyan-900/30"
+                      className="border-orange-500/50 bg-black/30 hover:bg-orange-900/30"
                       onClick={() => setZoom((prev) => Math.max(0.5, prev - 0.2))}
-                      title={t.zoom}
+                      title={t.pressureMap}
                     >
-                      <ZoomOut className="w-4 h-4 text-cyan-300" />
+                      <ZoomOut className="w-4 h-4 text-orange-300" />
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
-                      className="border-cyan-500/50 bg-black/30 hover:bg-cyan-900/30"
+                      className="border-orange-500/50 bg-black/30 hover:bg-orange-900/30"
                       onClick={handleRotateLeft}
-                      title={t.rotate}
+                      title={t.windPatterns}
                     >
-                      <RotateCw className="w-4 h-4 text-cyan-300 rotate-90" />
+                      <RotateCw className="w-4 h-4 text-orange-300 rotate-90" />
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
-                      className="border-cyan-500/50 bg-black/30 hover:bg-cyan-900/30"
+                      className="border-orange-500/50 bg-black/30 hover:bg-orange-900/30"
                       onClick={handleRotateRight}
-                      title={t.rotate}
+                      title={t.climatePatterns}
                     >
-                      <RotateCw className="w-4 h-4 text-cyan-300 -rotate-90" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={showWaterDetection ? "default" : "outline"}
-                      className={`${showWaterDetection ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700' : 'border-cyan-500/50 bg-black/30 hover:bg-cyan-900/30'} transition-all duration-300`}
-                      onClick={() => setShowWaterDetection(!showWaterDetection)}
-                      title={t.waterDetection}
-                    >
-                      <Target className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={viewMode === "interior" ? "default" : "outline"}
-                      className={`${viewMode === "interior" ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700' : 'border-cyan-500/50 bg-black/30 hover:bg-purple-900/30'} transition-all duration-300`}
-                      onClick={toggleViewMode}
-                      title={t.interiorView}
-                    >
-                      <Eye className="w-4 h-4" />
+                      <RotateCw className="w-4 h-4 text-orange-300 -rotate-90" />
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
-                      className="border-cyan-500/50 bg-black/30 hover:bg-cyan-900/30"
+                      className="border-orange-500/50 bg-black/30 hover:bg-orange-900/30"
                       onClick={handleResetView}
-                      title={t.resetView}
+                      title={t.seasonalChanges}
                     >
-                      <Compass className="w-4 h-4 text-cyan-300" />
+                      <Compass className="w-4 h-4 text-orange-300" />
                     </Button>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                {/* 3D Model Container */}
-                <div className="relative h-72 sm:h-96 rounded-xl overflow-hidden border border-cyan-500/20 bg-gradient-to-b from-gray-900 via-black to-gray-900">
-                  {/* 3D Venus Interior Model */}
-                  <VenusInteriorModel 
-                    zoom={zoom} 
-                    rotation={manualRotation} 
-                    showWaterDetection={showWaterDetection}
-                  />
+                {/* 3D Environmental Model */}
+                <div className="relative h-72 sm:h-96 rounded-xl overflow-hidden border border-orange-500/20 bg-gradient-to-b from-gray-900 via-black to-gray-900">
+                  <VenusEnvironmentalModel zoom={zoom} rotation={rotation} />
                   
-                  {/* Surface Markers for Interior Points */}
-                  {showWaterDetection && interiorDeposits.map((deposit, i) => (
-                    <InteriorHotspotMarker
+                  {/* Environmental Indicators */}
+                  {indicators.map((indicator, i) => (
+                    <EnvironmentalIndicator
                       key={i}
-                      x={deposit.surfaceX}
-                      y={deposit.surfaceY}
-                      intensity={deposit.intensity}
-                      depth={deposit.depth}
+                      x={indicator.x}
+                      y={indicator.y}
+                      type={indicator.type}
+                      value={indicator.value}
+                      status={indicator.status}
                       delay={i * 0.3}
-                      onClick={() => setSelectedHotspot(selectedHotspot === i ? null : i)}
+                      onClick={() => setSelectedIndicator(selectedIndicator === i ? null : i)}
                     />
                   ))}
                   
-                  {/* Selected Hotspot Info */}
-                  {selectedHotspot !== null && (
+                  {/* Selected Indicator Info */}
+                  {selectedIndicator !== null && (
                     <motion.div
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="absolute bg-gradient-to-br from-gray-900/95 to-black/95 backdrop-blur-xl rounded-lg p-4 border border-cyan-500/30 shadow-2xl max-w-xs z-20"
+                      className="absolute bg-gradient-to-br from-gray-900/95 to-black/95 backdrop-blur-xl rounded-lg p-4 border border-orange-500/30 shadow-2xl max-w-xs z-20"
                       style={{
-                        left: `${interiorDeposits[selectedHotspot].surfaceX > 50 ? interiorDeposits[selectedHotspot].surfaceX - 40 : interiorDeposits[selectedHotspot].surfaceX + 5}%`,
-                        top: `${interiorDeposits[selectedHotspot].surfaceY > 60 ? interiorDeposits[selectedHotspot].surfaceY - 40 : interiorDeposits[selectedHotspot].surfaceY + 5}%`,
+                        left: `${indicators[selectedIndicator].x > 50 ? indicators[selectedIndicator].x - 40 : indicators[selectedIndicator].x + 5}%`,
+                        top: `${indicators[selectedIndicator].y > 60 ? indicators[selectedIndicator].y - 40 : indicators[selectedIndicator].y + 5}%`,
                       }}
                     >
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <div className="font-semibold text-lg text-cyan-300">
-                            {interiorDeposits[selectedHotspot].name}
+                          <div className="font-semibold text-lg text-orange-300">
+                            {indicators[selectedIndicator].name}
                           </div>
                           <div className={`text-xs px-2 py-1 rounded-full ${
-                            interiorDeposits[selectedHotspot].intensity === "high" ? "bg-cyan-900/50 text-cyan-300" :
-                            interiorDeposits[selectedHotspot].intensity === "medium" ? "bg-blue-900/50 text-blue-300" :
-                            "bg-purple-900/50 text-purple-300"
+                            indicators[selectedIndicator].status === "normal" ? "bg-green-900/50 text-green-300" :
+                            indicators[selectedIndicator].status === "warning" ? "bg-yellow-900/50 text-yellow-300" :
+                            "bg-red-900/50 text-red-300"
                           }`}>
-                            {interiorDeposits[selectedHotspot].intensity.toUpperCase()}
+                            {t[indicators[selectedIndicator].status]}
                           </div>
                         </div>
                         <div className="text-sm text-gray-300">
-                          {interiorDeposits[selectedHotspot].description}
+                          {indicators[selectedIndicator].description}
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-3 pt-2">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-xs text-gray-400">
-                              <Thermometer className="w-3 h-3" />
-                              {t.temperature}
-                            </div>
-                            <div className="text-sm font-semibold text-orange-300">
-                              {interiorDeposits[selectedHotspot].temp}°C
-                            </div>
+                        <div className="space-y-2 pt-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-400">
+                              {getIndicatorLabel(indicators[selectedIndicator].type)}:
+                            </span>
+                            <span className="text-lg font-bold text-white">
+                              {indicators[selectedIndicator].value}
+                              {getIndicatorUnit(indicators[selectedIndicator].type)}
+                            </span>
                           </div>
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-xs text-gray-400">
-                              <Droplets className="w-3 h-3" />
-                              {t.humidity}
-                            </div>
-                            <div className="text-sm font-semibold text-blue-300">
-                              {interiorDeposits[selectedHotspot].humidity}%
-                            </div>
-                          </div>
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-xs text-gray-400">
-                              <Drill className="w-3 h-3" />
-                              {t.drillingDepth}
-                            </div>
-                            <div className="text-sm font-semibold text-purple-300">
-                              {interiorDeposits[selectedHotspot].depth}км
-                            </div>
-                          </div>
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-xs text-gray-400">
-                              <Waves className="w-3 h-3" />
-                              {t.waterVolume}
-                            </div>
-                            <div className="text-sm font-semibold text-cyan-300">
-                              {interiorDeposits[selectedHotspot].volume}км³
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="pt-2 border-t border-gray-700/50">
-                          <div className="text-xs text-gray-400 mb-1">Состав:</div>
-                          <div className="flex flex-wrap gap-1">
-                            {interiorDeposits[selectedHotspot].composition.map((comp, idx) => (
-                              <span key={idx} className="text-xs px-2 py-1 bg-gray-800/50 rounded">
-                                {comp}
+                          
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-400">Тренд:</span>
+                            <div className="flex items-center gap-1">
+                              {getTrendIcon(indicators[selectedIndicator].trends.trend)}
+                              <span className={
+                                indicators[selectedIndicator].trends.trend === "rising" ? "text-red-300" :
+                                indicators[selectedIndicator].trends.trend === "falling" ? "text-green-300" :
+                                "text-yellow-300"
+                              }>
+                                {indicators[selectedIndicator].trends.change > 0 ? "+" : ""}
+                                {indicators[selectedIndicator].trends.change}
+                                {getIndicatorUnit(indicators[selectedIndicator].type)}
                               </span>
-                            ))}
+                            </div>
                           </div>
-                        </div>
-                        
-                        <div className="pt-2 border-t border-gray-700/50">
-                          <div className="text-xs text-gray-400">Сложность доступа:</div>
-                          <div className="text-sm font-semibold text-amber-300">
-                            {interiorDeposits[selectedHotspot].accessDifficulty}
+                          
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-400">Историческое среднее:</span>
+                            <span className="text-gray-300">
+                              {indicators[selectedIndicator].trends.historicalAvg}
+                              {getIndicatorUnit(indicators[selectedIndicator].type)}
+                            </span>
                           </div>
                         </div>
                       </div>
                     </motion.div>
                   )}
                   
-                  {/* Instructions */}
-                  <div className="absolute bottom-4 left-4 text-xs text-cyan-300/70 bg-black/30 px-3 py-1.5 rounded-full backdrop-blur-sm border border-cyan-500/20">
-                    {t.clickToExplore}
+                  {/* Layer Info */}
+                  <div className="absolute top-4 right-4 text-xs text-orange-300/70 bg-black/30 px-3 py-1.5 rounded-full backdrop-blur-sm border border-orange-500/20">
+                    {t.layers}: 5
                   </div>
                 </div>
 
-                {/* Layer Controls */}
+                {/* Time Range Controls */}
                 <div className="flex gap-2 mt-4">
-                  {(["surface", "mantle", "core"] as const).map((layer) => (
+                  {(["24h", "7d", "30d"] as const).map((range) => (
                     <Button
-                      key={layer}
+                      key={range}
                       size="sm"
-                      variant={activeLayer === layer ? "default" : "outline"}
+                      variant={timeRange === range ? "default" : "outline"}
                       className={`${
-                        activeLayer === layer 
-                          ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700' 
-                          : 'border-cyan-500/50 bg-black/30 hover:bg-cyan-900/30'
+                        timeRange === range 
+                          ? 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700' 
+                          : 'border-orange-500/50 bg-black/30 hover:bg-orange-900/30'
                       } transition-all duration-300`}
-                      onClick={() => setActiveLayer(layer)}
+                      onClick={() => setTimeRange(range)}
                     >
-                      {t[layer]}
+                      {range}
                     </Button>
                   ))}
                 </div>
@@ -893,7 +811,7 @@ export function VenusInteriorGlobe() {
             </Card>
           </motion.div>
 
-          {/* Legend and Stats Sidebar */}
+          {/* Environmental Metrics Sidebar */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -901,97 +819,108 @@ export function VenusInteriorGlobe() {
             transition={{ duration: 0.8, delay: 0.3 }}
             className="space-y-4"
           >
-            {/* Legend Card */}
-            <Card className="border-cyan-500/30 bg-gradient-to-br from-gray-900/50 to-black/50 backdrop-blur-xl">
+            {/* Atmospheric Composition */}
+            <Card className="border-orange-500/30 bg-gradient-to-br from-gray-900/50 to-black/50 backdrop-blur-xl">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-cyan-300" />
-                  {t.legend}
+                  <Layers className="w-4 h-4 text-orange-300" />
+                  {t.atmosphericComposition}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3">
                 {[
-                  { intensity: "high", label: t.highWater, value: "400+ км³", color: "from-cyan-400 to-blue-500", depth: "5-10км" },
-                  { intensity: "medium", label: t.mediumWater, value: "200-400 км³", color: "from-blue-400 to-indigo-500", depth: "10-15км" },
-                  { intensity: "low", label: t.lowWater, value: "50-200 км³", color: "from-indigo-400 to-purple-500", depth: "15-25км" },
+                  { gas: "CO₂", percentage: 96.5, color: "from-orange-500 to-red-500", status: "critical" },
+                  { gas: "N₂", percentage: 3.5, color: "from-blue-500 to-indigo-500", status: "normal" },
+                  { gas: "SO₂", percentage: 0.015, color: "from-yellow-500 to-orange-500", status: "warning" },
+                  { gas: "Ar", percentage: 0.007, color: "from-purple-500 to-pink-500", status: "normal" },
+                  { gas: "H₂O", percentage: 0.002, color: "from-cyan-500 to-blue-500", status: "normal" },
                 ].map((item) => (
-                  <div key={item.intensity} className="flex items-center gap-3">
-                    <div className={`w-5 h-5 rounded-full bg-gradient-to-br ${item.color}`} />
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-white">{item.label}</div>
-                      <div className="text-xs text-gray-400">{item.value} • {item.depth}</div>
+                  <div key={item.gas} className="space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-300">{item.gas}</span>
+                      <span className="text-white font-medium">{item.percentage}%</span>
+                    </div>
+                    <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                      <motion.div 
+                        className={`h-full rounded-full bg-gradient-to-r ${item.color}`}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${item.percentage}%` }}
+                        transition={{ duration: 1, delay: 0.2 }}
+                      />
                     </div>
                   </div>
                 ))}
               </CardContent>
             </Card>
 
-            {/* Stats Cards */}
-            {[
-              { 
-                title: t.hotspots, 
-                value: "6", 
-                color: "text-cyan-400", 
-                border: "border-cyan-500/30",
-                gradient: "from-cyan-900/20 to-cyan-700/10",
-                icon: <Target className="w-4 h-4" />
-              },
-              { 
-                title: t.waterVolume, 
-                value: "2,000", 
-                suffix: "км³", 
-                color: "text-blue-400", 
-                border: "border-blue-500/30",
-                gradient: "from-blue-900/20 to-blue-700/10",
-                icon: <Waves className="w-4 h-4" />
-              },
-              { 
-                title: t.drillingDepth, 
-                value: "25", 
-                suffix: "км", 
-                color: "text-purple-400", 
-                border: "border-purple-500/30",
-                gradient: "from-purple-900/20 to-purple-700/10",
-                icon: <Drill className="w-4 h-4" />
-              },
-              { 
-                title: t.temperature, 
-                value: "465", 
-                suffix: "°C", 
-                color: "text-orange-400", 
-                border: "border-orange-500/30",
-                gradient: "from-orange-900/20 to-orange-700/10",
-                icon: <Thermometer className="w-4 h-4" />
-              },
-              { 
-                title: t.atmosphericPressure, 
-                value: "90", 
-                suffix: "атм", 
-                color: "text-amber-400", 
-                border: "border-amber-500/30",
-                gradient: "from-amber-900/20 to-amber-700/10",
-                icon: <Globe className="w-4 h-4" />
-              }
-            ].map((stat, idx) => (
-              <Card 
-                key={idx} 
-                className={`${stat.border} bg-gradient-to-br ${stat.gradient} backdrop-blur-xl`}
-              >
-                <CardContent className="pt-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className={`text-2xl font-bold ${stat.color}`}>
-                        {stat.value}{stat.suffix && <span className="text-lg">{stat.suffix}</span>}
-                      </div>
-                      <div className="text-xs text-gray-300 mt-1">{stat.title}</div>
-                    </div>
-                    <div className={`${stat.color} opacity-70`}>
-                      {stat.icon}
-                    </div>
+            {/* Real-time Charts */}
+            <Card className="border-red-500/30 bg-gradient-to-br from-gray-900/50 to-black/50 backdrop-blur-xl">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-red-300" />
+                  {t.temperature} ({timeRange})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <RealTimeDataChart type="temperature" data={temperatureData} />
+                <div className="flex justify-between mt-2 text-xs text-gray-400">
+                  <span>Сейчас: {temperatureData[temperatureData.length - 1]?.toFixed(1)}°C</span>
+                  <span>Среднее: {(temperatureData.reduce((a, b) => a + b, 0) / temperatureData.length).toFixed(1)}°C</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-blue-500/30 bg-gradient-to-br from-gray-900/50 to-black/50 backdrop-blur-xl">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Gauge className="w-4 h-4 text-blue-300" />
+                  {t.pressure} ({timeRange})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <RealTimeDataChart type="pressure" data={pressureData} />
+                <div className="flex justify-between mt-2 text-xs text-gray-400">
+                  <span>Сейчас: {pressureData[pressureData.length - 1]?.toFixed(1)} атм</span>
+                  <span>Среднее: {(pressureData.reduce((a, b) => a + b, 0) / pressureData.length).toFixed(1)} атм</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-cyan-500/30 bg-gradient-to-br from-gray-900/50 to-black/50 backdrop-blur-xl">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Wind className="w-4 h-4 text-cyan-300" />
+                  {t.windSpeed} ({timeRange})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <RealTimeDataChart type="wind" data={windData} />
+                <div className="flex justify-between mt-2 text-xs text-gray-400">
+                  <span>Сейчас: {windData[windData.length - 1]?.toFixed(1)} км/ч</span>
+                  <span>Среднее: {(windData.reduce((a, b) => a + b, 0) / windData.length).toFixed(1)} км/ч</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Status Summary */}
+            <Card className="border-purple-500/30 bg-gradient-to-br from-gray-900/50 to-black/50 backdrop-blur-xl">
+              <CardContent className="pt-4">
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <div className="text-2xl font-bold text-red-400">3</div>
+                    <div className="text-xs text-gray-300">{t.critical}</div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                  <div>
+                    <div className="text-2xl font-bold text-yellow-400">1</div>
+                    <div className="text-xs text-gray-300">{t.warning}</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-green-400">1</div>
+                    <div className="text-xs text-gray-300">{t.normal}</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </motion.div>
         </div>
       </div>

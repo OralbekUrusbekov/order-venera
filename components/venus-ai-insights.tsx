@@ -11,7 +11,7 @@ import { useState, useEffect } from "react"
 const translations = {
   kk: {
     title: "V-Insight AI",
-    subtitle: "Жасанды интеллект арқылы су анықтау",
+    subtitle: "Жасанды интеллект арқылы Венера атмосферасын зерттеу",
     neuralNetwork: "Нейросеть белсенділігі",
     dataProcessing: "Деректерді өңдеу",
     predictions: "Болжамдар",
@@ -19,7 +19,7 @@ const translations = {
     processing: "Өңдеу",
     learning: "Үйрену",
     anomalies: "Аномалиялар анықталды",
-    waterChannels: "Су каналдары табылды",
+    atmosphericLayers: "Атмосфералық қабаттар",
     confidence: "Сенімділік",
     realtime: "Нақты уақыт",
     aiStatus: "AI Жүйесі",
@@ -28,7 +28,7 @@ const translations = {
   },
   ru: {
     title: "V-Insight AI",
-    subtitle: "Обнаружение воды с помощью ИИ",
+    subtitle: "Изучение атмосферы Венеры с помощью ИИ",
     neuralNetwork: "Активность нейросети",
     dataProcessing: "Обработка данных",
     predictions: "Прогнозы",
@@ -36,7 +36,7 @@ const translations = {
     processing: "Обработка",
     learning: "Обучение",
     anomalies: "Обнаружено аномалий",
-    waterChannels: "Найдено водных каналов",
+    atmosphericLayers: "Атмосферные слои",
     confidence: "Уверенность",
     realtime: "Реальное время",
     aiStatus: "AI Система",
@@ -45,7 +45,7 @@ const translations = {
   },
   en: {
     title: "V-Insight AI",
-    subtitle: "AI-powered water detection",
+    subtitle: "AI-powered Venus atmosphere analysis",
     neuralNetwork: "Neural Network Activity",
     dataProcessing: "Data Processing",
     predictions: "Predictions",
@@ -53,7 +53,7 @@ const translations = {
     processing: "Processing",
     learning: "Learning",
     anomalies: "Anomalies Detected",
-    waterChannels: "Water Channels Found",
+    atmosphericLayers: "Atmospheric Layers",
     confidence: "Confidence",
     realtime: "Real-time",
     aiStatus: "AI System",
@@ -61,6 +61,7 @@ const translations = {
     analyzing: "Analyzing...",
   },
 }
+
 
 /* ---------------- TYPES ---------------- */
 

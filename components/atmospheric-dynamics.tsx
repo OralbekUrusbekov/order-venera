@@ -171,7 +171,7 @@ export function AtmosphericDynamics() {
               {t.title}
             </span>
           </h2>
-          <p className="text-base sm:text-lg text-foreground/60 max-w-2xl mx-auto">{t.subtitle}</p>
+          
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
