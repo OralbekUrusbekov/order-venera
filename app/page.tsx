@@ -10,7 +10,7 @@ import { WaterScarcityMaps } from "@/components/water-scarcity-maps"
 import { VenusAIInsights } from "@/components/venus-ai-insights"
 import { AtmosphericDynamics } from "@/components/atmospheric-dynamics"
 import { PredictiveAnalytics } from "@/components/predictive-analytics"
-import { Venus3DGlobe } from "@/components/venus-3d-globe"
+import { VenusInteriorGlobe } from "@/components/venus-3d-globe"
 
 export default function Home() {
   return (
@@ -26,7 +26,7 @@ export default function Home() {
       </section>
 
       <section id="3d-map">
-        <Venus3DGlobe />
+        <VenusInteriorGlobe />
       </section>
 
       <section id="drilling">
@@ -37,9 +37,7 @@ export default function Home() {
         <AtmosphericDynamics />
       </section>
 
-      <section id="detection">
-        <WaterScarcityMaps />
-      </section>
+    
 
       <section id="analytics">
         <PredictiveAnalytics />
