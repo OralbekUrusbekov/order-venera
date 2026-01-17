@@ -52,10 +52,10 @@ export function Footer() {
           <div>
             <div className="flex items-center justify-center md:justify-start gap-2 mb-4">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                <span className="text-white font-bold text-sm">MR</span>
+                <span className="text-white font-bold text-sm">VI</span>
               </div>
               <span className="font-bold text-lg bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Mars Rover
+                V-Insight AI
               </span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-sm mx-auto md:mx-0">
