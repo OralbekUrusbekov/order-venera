@@ -24,7 +24,7 @@ import {
 const translations = {
   kk: {
     title: "Техникалық Сипаттамалар",
-    description: "Марс роботының барлық компоненттері",
+    description: "Венера роботының барлық компоненттері",
     close: "Жабу",
     led: {
       title: "Жарық диоды (LED)",
@@ -101,7 +101,7 @@ const translations = {
   },
   ru: {
     title: "Технические Характеристики",
-    description: "Все компоненты марсохода",
+    description: "Все компоненты венера",
     close: "Закрыть",
     led: {
       title: "Светодиод (LED)",

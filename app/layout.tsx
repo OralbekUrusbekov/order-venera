@@ -9,7 +9,7 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Су Асты Су Ресурстарын Анықтау Жүйесі | Groundwater Detection System",
+  title: "Су Асты Су Ресурстарын Анықтау",
   description:
     "Arduino Uno негіздеп құрылған су асты су ресурстарын анықтау және шығару жүйесі. Орталық Азияның су тапшылығы мәселесін шешу үшін жасалған ақылды датчи технологиялары | Arduino-based groundwater detection and extraction system for solving Central Asia's water crisis.",
   generator: "v0.app",

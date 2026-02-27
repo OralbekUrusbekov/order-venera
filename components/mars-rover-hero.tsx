@@ -7,21 +7,21 @@ import { ChevronDown } from "lucide-react"
 
 const translations = {
   kk: {
-    title: "Марс зерттеушісі",
+    title: "Венера зерттеушісі",
     subtitle: "Arduino негізіндегі робот",
-    description: "Білім беру мақсатындағы Марс бетін зерттеуге арналған автономды робот",
+    description: "Білім беру мақсатындағы Венера бетін зерттеуге арналған автономды робот",
     cta: "Жобаны көру",
     learn: "Толығырақ",
   },
   ru: {
-    title: "Марсоход",
+    title: "Венераоход",
     subtitle: "Робот на базе Arduino",
-    description: "Автономный робот для исследования поверхности Марса в образовательных целях",
+    description: "Автономный робот для исследования поверхности Венера в образовательных целях",
     cta: "Смотреть проект",
     learn: "Узнать больше",
   },
   en: {
-    title: "Mars Rover",
+    title: "Benera Rover",
     subtitle: "Arduino-based Robot",
     description: "Autonomous robot designed for Mars surface exploration in educational purposes",
     cta: "View Project",

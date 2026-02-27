@@ -183,7 +183,7 @@ function VenusEnvironmentalModel({ zoom = 1, rotation = 0 }: {
 
 const translations = {
   kk: {
-    title: "Венера Экологиялық Талдау",
+    title: "Венера планетасының экологиялық талдауы",
     subtitle: "Атмосфералық және климаттық көрсеткіштердің нақты уақыттағы мониторингі",
     temperature: "Температура",
     pressure: "Қысым",
@@ -217,7 +217,7 @@ const translations = {
     windPatterns: "Жел үлгілері",
   },
   ru: {
-    title: "Экологический Анализ Венеры",
+    title: "Экологический анализ планеты Венера",
     subtitle: "Мониторинг атмосферных и климатических показателей в реальном времени",
     temperature: "Температура",
     pressure: "Давление",
@@ -251,7 +251,7 @@ const translations = {
     windPatterns: "Ветровые паттерны",
   },
   en: {
-    title: "Venus Environmental Analysis",
+    title: "Environmental analysis of the planet Venus",
     subtitle: "Real-time monitoring of atmospheric and climate indicators",
     temperature: "Temperature",
     pressure: "Pressure",

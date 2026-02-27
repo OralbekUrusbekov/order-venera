@@ -7,7 +7,7 @@ const translations = {
   kk: {
     about: "Жоба туралы",
     aboutText:
-      "Arduino негізіндегі білім беру роботы. Марс зерттеушісін басқаруды үйреніңіз.",
+      "Arduino негізіндегі білім беру роботы.",
     contact: "Байланыс",
     email: "Email",
     github: "GitHub репозиторийі",
@@ -18,7 +18,7 @@ const translations = {
   ru: {
     about: "О проекте",
     aboutText:
-      "Образовательный робот на базе Arduino. Изучите управление марсоходом.",
+      "Образовательный робот на базе Arduino.",
     contact: "Контакты",
     email: "Email",
     github: "GitHub репозиторий",
@@ -29,7 +29,7 @@ const translations = {
   en: {
     about: "About Project",
     aboutText:
-      "Arduino-based educational robot. Learn to control a Mars Rover.",
+      "Arduino-based educational robot.",
     contact: "Contact",
     email: "Email",
     github: "GitHub Repository",
